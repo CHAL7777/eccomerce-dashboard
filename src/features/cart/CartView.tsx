@@ -1,0 +1,186 @@
+import React from "react";
+import { motion } from "framer-motion";
+import { ShoppingCart, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
+import { useCart } from "../../contexts/CartContext";
+import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "../../utils/formatCurrency";
+
+const CartView: React.FC = () => {
+  const { cart, updateQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart();
+  const navigate = useNavigate();
+
+  if (!cart || cart.items.length === 0) {
+    return (
+      <div className='flex-1 overflow-auto relative z-10'>
+        <header className='bg-gray-800 bg-opacity-50 backdrop-blur-md border-b border-gray-700 p-4'>
+          <div className='max-w-7xl mx-auto'>
+            <h1 className='text-2xl font-semibold text-gray-100'>Shopping Cart</h1>
+          </div>
+        </header>
+
+        <main className='max-w-7xl mx-auto py-6 px-4 lg:px-8'>
+          <div className='text-center py-12'>
+            <ShoppingCart size={64} className='mx-auto text-gray-600 mb-4' />
+            <h2 className='text-xl font-semibold text-gray-300 mb-2'>Your cart is empty</h2>
+            <p className='text-gray-400 mb-6'>Add some products to get started!</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/products')}
+              className='px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors'
+            >
+              Browse Products
+            </motion.button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className='flex-1 overflow-auto relative z-10'>
+      <header className='bg-gray-800 bg-opacity-50 backdrop-blur-md border-b border-gray-700 p-4'>
+        <div className='max-w-7xl mx-auto'>
+          <h1 className='text-2xl font-semibold text-gray-100'>Shopping Cart</h1>
+          <p className='text-gray-400 mt-1'>{totalItems} items in your cart</p>
+        </div>
+      </header>
+
+      <main className='max-w-7xl mx-auto py-6 px-4 lg:px-8'>
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
+          {/* Cart Items */}
+          <div className='lg:col-span-2'>
+            <div className='bg-gray-800 bg-opacity-50 backdrop-blur-md rounded-lg border border-gray-700 overflow-hidden'>
+              <div className='p-6 border-b border-gray-700 flex justify-between items-center'>
+                <h2 className='text-lg font-semibold text-gray-100'>Cart Items</h2>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={clearCart}
+                  className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2'
+                >
+                  <Trash2 size={16} />
+                  Clear Cart
+                </motion.button>
+              </div>
+
+              <div className='divide-y divide-gray-700'>
+                {cart.items.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className='p-6'
+                  >
+                    <div className='flex items-center gap-4'>
+                      {/* Product Image */}
+                      <div className='w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center'>
+                        <span className='text-gray-400 text-xs'>No Image</span>
+                      </div>
+
+                      {/* Product Details */}
+                      <div className='flex-1'>
+                        <h3 className='font-semibold text-gray-100'>{item.product.name}</h3>
+                        <p className='text-gray-400 text-sm'>{item.product.category}</p>
+                        <p className='text-indigo-400 font-semibold'>{formatCurrency(item.price)}</p>
+                      </div>
+
+                      {/* Quantity Controls */}
+                      <div className='flex items-center gap-3'>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className='p-1 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300'
+                        >
+                          <Minus size={16} />
+                        </motion.button>
+                        
+                        <span className='w-12 text-center text-gray-100 font-semibold'>
+                          {item.quantity}
+                        </span>
+                        
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className='p-1 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300'
+                        >
+                          <Plus size={16} />
+                        </motion.button>
+                      </div>
+
+                      {/* Item Total */}
+                      <div className='text-right'>
+                        <p className='font-semibold text-gray-100'>{formatCurrency(item.totalPrice)}</p>
+                      </div>
+
+                      {/* Remove Button */}
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => removeItem(item.id)}
+                        className='p-2 text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-30 rounded-lg transition-colors'
+                      >
+                        <Trash2 size={16} />
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Cart Summary */}
+          <div className='lg:col-span-1'>
+            <div className='bg-gray-800 bg-opacity-50 backdrop-blur-md rounded-lg border border-gray-700 p-6 sticky top-6'>
+              <h2 className='text-lg font-semibold text-gray-100 mb-6'>Order Summary</h2>
+              
+              <div className='space-y-4 mb-6'>
+                <div className='flex justify-between text-gray-300'>
+                  <span>Subtotal ({totalItems} items)</span>
+                  <span>{formatCurrency(totalPrice)}</span>
+                </div>
+                <div className='flex justify-between text-gray-300'>
+                  <span>Shipping</span>
+                  <span className='text-green-400'>Free</span>
+                </div>
+                <div className='flex justify-between text-gray-300'>
+                  <span>Tax</span>
+                  <span>{formatCurrency(totalPrice * 0.08)}</span>
+                </div>
+                <div className='border-t border-gray-700 pt-4'>
+                  <div className='flex justify-between text-lg font-semibold text-gray-100'>
+                    <span>Total</span>
+                    <span>{formatCurrency(totalPrice * 1.08)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate('/checkout')}
+                className='w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-semibold'
+              >
+                Proceed to Checkout
+                <ArrowRight size={16} />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate('/products')}
+                className='w-full py-3 mt-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors'
+              >
+                Continue Shopping
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default CartView;
