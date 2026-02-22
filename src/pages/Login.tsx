@@ -271,12 +271,12 @@ const Login: React.FC = () => {
                   Remember me
                 </span>
               </label>
-              <Link
-                to="/forgot-password"
+              <a
+                href="mailto:support@storedash.com?subject=Password%20Reset%20Request"
                 className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
               >
                 Forgot password?
-              </Link>
+              </a>
             </div>
 
             <Button
@@ -295,22 +295,22 @@ const Login: React.FC = () => {
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Don't have an account?{' '}
-                <Link
-                  to="/register"
+                <a
+                  href="mailto:support@storedash.com?subject=StoreDash%20Access%20Request"
                   className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
                 >
                   Request access
-                </Link>
+                </a>
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-4">
                 By signing in, you agree to our{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-500">
+                <Link to="/settings" className="text-primary-600 hover:text-primary-500">
                   Terms of Service
-                </a>{' '}
+                </Link>{' '}
                 and{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-500">
+                <Link to="/settings" className="text-primary-600 hover:text-primary-500">
                   Privacy Policy
-                </a>
+                </Link>
               </p>
             </div>
           </div>

@@ -12,8 +12,7 @@ import {
   Key,
   Eye,
   EyeOff,
-  Check,
-  X
+  Check
 } from 'lucide-react';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -54,8 +53,13 @@ interface SettingsFormData {
   };
 }
 
+interface SaveStatus {
+  tone: 'success' | 'error' | 'info';
+  message: string;
+}
+
 const Settings: React.FC = () => {
-  const { theme, toggleTheme, isDarkMode } = useDarkMode();
+  const { theme, setThemeMode } = useDarkMode();
   const [activeSection, setActiveSection] = useState('general');
   const [formData, setFormData] = useState<SettingsFormData>({
     storeName: 'StoreDash',
@@ -88,6 +92,7 @@ const Settings: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus | null>(null);
 
   const sections: SettingSection[] = [
     {
@@ -146,51 +151,98 @@ const Settings: React.FC = () => {
     'Australia/Sydney'
   ];
 
-  const handleInputChange = (section: string, field: string, value: any) => {
-    setFormData(prev => {
-      if (section.includes('.')) {
-        const [parent, child] = section.split('.');
-        return {
-          ...prev,
-          [parent]: {
-            ...(prev as any)[parent],
-            [child]: value
-          }
-        };
+  const updateRootField = <
+    Key extends 'storeName' | 'storeEmail' | 'storeCurrency' | 'storeTimezone'
+  >(
+    key: Key,
+    value: SettingsFormData[Key]
+  ) => {
+    setFormData((previous) => ({
+      ...previous,
+      [key]: value
+    }));
+  };
+
+  const updateNestedField = <
+    Section extends 'notifications' | 'security' | 'payment',
+    Key extends keyof SettingsFormData[Section]
+  >(
+    section: Section,
+    key: Key,
+    value: SettingsFormData[Section][Key]
+  ) => {
+    setFormData((previous) => ({
+      ...previous,
+      [section]: {
+        ...previous[section],
+        [key]: value
       }
-      return {
-        ...prev,
-        [section]: value
-      };
-    });
+    }));
   };
 
   const handleSave = () => {
-    // In real app, would make API call here
-    console.log('Saving settings:', formData);
-    alert('Settings saved successfully!');
+    setSaveStatus({
+      tone: 'success',
+      message: 'Settings saved successfully.'
+    });
   };
 
   const handleExportData = () => {
-    // Export settings logic
-    alert('Data exported successfully!');
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      settings: formData
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json'
+    });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = 'storedash-settings.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+
+    setSaveStatus({
+      tone: 'info',
+      message: 'Settings exported as storedash-settings.json.'
+    });
   };
 
   const handlePasswordChange = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setSaveStatus({
+        tone: 'error',
+        message: 'Please fill in all password fields.'
+      });
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
-      alert('New passwords do not match!');
+      setSaveStatus({
+        tone: 'error',
+        message: 'New password and confirmation do not match.'
+      });
       return;
     }
+
     if (newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
+      setSaveStatus({
+        tone: 'error',
+        message: 'Password must be at least 8 characters long.'
+      });
       return;
     }
-    // In real app, would make API call here
-    console.log('Changing password...');
+
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
-    alert('Password changed successfully!');
+    setSaveStatus({
+      tone: 'success',
+      message: 'Password changed successfully.'
+    });
   };
 
   const renderGeneralSettings = () => (
@@ -207,7 +259,7 @@ const Settings: React.FC = () => {
             <input
               type="text"
               value={formData.storeName}
-              onChange={(e) => handleInputChange('storeName', '', e.target.value)}
+              onChange={(e) => updateRootField('storeName', e.target.value)}
               className="input-field"
             />
           </div>
@@ -218,7 +270,7 @@ const Settings: React.FC = () => {
             <input
               type="email"
               value={formData.storeEmail}
-              onChange={(e) => handleInputChange('storeEmail', '', e.target.value)}
+              onChange={(e) => updateRootField('storeEmail', e.target.value)}
               className="input-field"
             />
           </div>
@@ -228,7 +280,7 @@ const Settings: React.FC = () => {
             </label>
             <select
               value={formData.storeCurrency}
-              onChange={(e) => handleInputChange('storeCurrency', '', e.target.value)}
+              onChange={(e) => updateRootField('storeCurrency', e.target.value)}
               className="input-field"
             >
               {currencies.map(currency => (
@@ -242,7 +294,7 @@ const Settings: React.FC = () => {
             </label>
             <select
               value={formData.storeTimezone}
-              onChange={(e) => handleInputChange('storeTimezone', '', e.target.value)}
+              onChange={(e) => updateRootField('storeTimezone', e.target.value)}
               className="input-field"
             >
               {timezones.map(tz => (
@@ -282,7 +334,7 @@ const Settings: React.FC = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => toggleTheme()}
+            onClick={() => setThemeMode('light')}
             className={`p-6 rounded-lg border-2 transition-all ${
               theme === 'light'
                 ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
@@ -300,7 +352,7 @@ const Settings: React.FC = () => {
           </button>
 
           <button
-            onClick={() => toggleTheme()}
+            onClick={() => setThemeMode('dark')}
             className={`p-6 rounded-lg border-2 transition-all ${
               theme === 'dark'
                 ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
@@ -318,7 +370,7 @@ const Settings: React.FC = () => {
           </button>
 
           <button
-            onClick={() => toggleTheme()}
+            onClick={() => setThemeMode('system')}
             className={`p-6 rounded-lg border-2 transition-all ${
               theme === 'system'
                 ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
@@ -383,7 +435,9 @@ const Settings: React.FC = () => {
           Notification Channels
         </h3>
         <div className="space-y-4">
-          {Object.entries(formData.notifications).map(([key, value]) => (
+          {(Object.entries(formData.notifications) as Array<
+            [keyof SettingsFormData['notifications'], boolean]
+          >).map(([key, value]) => (
             <div key={key} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white capitalize">
@@ -397,7 +451,7 @@ const Settings: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={value}
-                  onChange={(e) => handleInputChange('notifications', key, e.target.checked)}
+                  onChange={(e) => updateNestedField('notifications', key, e.target.checked)}
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
@@ -515,7 +569,7 @@ const Settings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={formData.security.twoFactor}
-                onChange={(e) => handleInputChange('security', 'twoFactor', e.target.checked)}
+                onChange={(e) => updateNestedField('security', 'twoFactor', e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
@@ -531,7 +585,7 @@ const Settings: React.FC = () => {
             </p>
             <select
               value={formData.security.sessionTimeout}
-              onChange={(e) => handleInputChange('security', 'sessionTimeout', parseInt(e.target.value))}
+              onChange={(e) => updateNestedField('security', 'sessionTimeout', parseInt(e.target.value, 10))}
               className="input-field"
             >
               <option value={15}>15 minutes</option>
@@ -563,7 +617,9 @@ const Settings: React.FC = () => {
                 Payment Gateways
               </h3>
               <div className="space-y-4">
-                {Object.entries(formData.payment).map(([key, value]) => (
+                {(Object.entries(formData.payment) as Array<
+                  [keyof SettingsFormData['payment'], boolean]
+                >).map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div>
                       <h4 className="font-medium text-gray-900 dark:text-white capitalize">
@@ -579,7 +635,7 @@ const Settings: React.FC = () => {
                       <input
                         type="checkbox"
                         checked={value}
-                        onChange={(e) => handleInputChange('payment', key, e.target.checked)}
+                        onChange={(e) => updateNestedField('payment', key, e.target.checked)}
                         className="sr-only peer"
                         disabled={key === 'testMode' && !formData.payment.stripe && !formData.payment.paypal && !formData.payment.cbe && !formData.payment.awash}
                       />
@@ -665,6 +721,20 @@ const Settings: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {saveStatus && (
+            <div
+              className={`mb-6 rounded-lg border px-4 py-3 text-sm ${
+                saveStatus.tone === 'success'
+                  ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-900/40 dark:bg-green-900/20 dark:text-green-300'
+                  : saveStatus.tone === 'error'
+                  ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300'
+                  : 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300'
+              }`}
+            >
+              {saveStatus.message}
+            </div>
+          )}
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
             {renderContent()}

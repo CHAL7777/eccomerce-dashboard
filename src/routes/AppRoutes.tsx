@@ -30,7 +30,9 @@ const AppRoutes: React.FC = () => {
           <Route path="customers" element={<Customers />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </React.Suspense>
   );

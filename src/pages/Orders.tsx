@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Search,
   Filter,
@@ -13,10 +13,10 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Modal from '../components/common/Modal';
-import { orders } from '../data/orders';
 import { Order, Status } from '../types';
 import { formatCurrency } from '../utils/formatCurrency';
 import { formatDate } from '../utils/formatDate';
@@ -24,7 +24,9 @@ import { formatDate } from '../utils/formatDate';
 const ITEMS_PER_PAGE = 8;
 
 const Orders: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryParam = searchParams.get('q') ?? '';
+  const [searchTerm, setSearchTerm] = useState(queryParam);
   const [selectedStatus, setSelectedStatus] = useState<Status | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
@@ -139,9 +141,46 @@ const Orders: React.FC = () => {
   }, [searchTerm, selectedStatus, orderList]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE));
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedOrders = filteredOrders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const hasOrders = filteredOrders.length > 0;
+  const firstResult = hasOrders ? startIndex + 1 : 0;
+  const lastResult = hasOrders
+    ? Math.min(startIndex + ITEMS_PER_PAGE, filteredOrders.length)
+    : 0;
+
+  useEffect(() => {
+    setSearchTerm(queryParam);
+  }, [queryParam]);
+
+  useEffect(() => {
+    setCurrentPage((previousPage) => Math.min(previousPage, totalPages));
+  }, [totalPages]);
+
+  const updateSearchParam = (value: string) => {
+    const updatedParams = new URLSearchParams(searchParams);
+    const trimmedValue = value.trim();
+
+    if (trimmedValue) {
+      updatedParams.set('q', trimmedValue);
+    } else {
+      updatedParams.delete('q');
+    }
+
+    setSearchParams(updatedParams, { replace: true });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    updateSearchParam(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: Status | 'all') => {
+    setSelectedStatus(value);
+    setCurrentPage(1);
+  };
 
   // Stats
   const stats = useMemo(() => {
@@ -283,7 +322,7 @@ const Orders: React.FC = () => {
                 type="text"
                 placeholder="Search orders by ID, customer, or email..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="input-field pl-10"
               />
             </div>
@@ -291,7 +330,7 @@ const Orders: React.FC = () => {
           <div className="flex gap-2">
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as Status | 'all')}
+              onChange={(e) => handleStatusChange(e.target.value as Status | 'all')}
               className="input-field"
             >
               <option value="all">All Status</option>
@@ -324,54 +363,65 @@ const Orders: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {paginatedOrders.map((order) => (
-                <tr 
-                  key={order.id} 
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <td className="table-cell">
-                    <span className="font-mono font-medium text-primary-600 dark:text-primary-400">
-                      {order.id}
-                    </span>
-                  </td>
-                  <td className="table-cell">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {order.customerName}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {order.customerEmail}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="table-cell">
-                    {formatDate(order.date, 'short')}
-                  </td>
-                  <td className="table-cell font-medium">
-                    {formatCurrency(order.total)}
-                  </td>
-                  <td className="table-cell">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(order.status)}
-                      {getStatusBadge(order.status)}
-                    </div>
-                  </td>
-                  <td className="table-cell">
-                    {getPaymentBadge(order.paymentStatus)}
-                  </td>
-                  <td className="table-cell">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        icon={Eye}
-                        onClick={() => setViewOrder(order)}
-                      />
-                      <Button variant="ghost" size="sm" icon={MoreVertical} />
-                    </div>
+              {hasOrders ? (
+                paginatedOrders.map((order) => (
+                  <tr 
+                    key={order.id} 
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  >
+                    <td className="table-cell">
+                      <span className="font-mono font-medium text-primary-600 dark:text-primary-400">
+                        {order.id}
+                      </span>
+                    </td>
+                    <td className="table-cell">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {order.customerName}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {order.customerEmail}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      {formatDate(order.date, 'short')}
+                    </td>
+                    <td className="table-cell font-medium">
+                      {formatCurrency(order.total)}
+                    </td>
+                    <td className="table-cell">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(order.status)}
+                        {getStatusBadge(order.status)}
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      {getPaymentBadge(order.paymentStatus)}
+                    </td>
+                    <td className="table-cell">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          icon={Eye}
+                          onClick={() => setViewOrder(order)}
+                        />
+                        <Button variant="ghost" size="sm" icon={MoreVertical} />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    No orders found. Try a different search keyword or status.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -379,9 +429,9 @@ const Orders: React.FC = () => {
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div className="text-sm text-gray-700 dark:text-gray-300">
-            Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+            Showing <span className="font-medium">{firstResult}</span> to{' '}
             <span className="font-medium">
-              {Math.min(startIndex + ITEMS_PER_PAGE, filteredOrders.length)}
+              {lastResult}
             </span>{' '}
             of <span className="font-medium">{filteredOrders.length}</span> results
           </div>
@@ -391,30 +441,34 @@ const Orders: React.FC = () => {
               size="sm"
               icon={ChevronLeft}
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              disabled={currentPage === 1 || !hasOrders}
             >
               Previous
             </Button>
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
-                .map((page, index, array) => (
-                  <React.Fragment key={page}>
-                    {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="px-2">...</span>
-                    )}
-                    <button
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors
-                        ${currentPage === page
-                          ? 'bg-primary-600 text-white'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  </React.Fragment>
-                ))}
+              {hasOrders ? (
+                Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
+                  .map((page, index, array) => (
+                    <React.Fragment key={page}>
+                      {index > 0 && array[index - 1] !== page - 1 && (
+                        <span className="px-2">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors
+                          ${currentPage === page
+                            ? 'bg-primary-600 text-white'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    </React.Fragment>
+                  ))
+              ) : (
+                <span className="px-3 text-sm text-gray-500 dark:text-gray-400">No pages</span>
+              )}
             </div>
             <Button
               variant="outline"
@@ -422,7 +476,7 @@ const Orders: React.FC = () => {
               icon={ChevronRight}
               iconPosition="right"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || !hasOrders}
             >
               Next
             </Button>

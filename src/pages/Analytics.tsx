@@ -13,7 +13,6 @@ import {
 import Button from '../components/common/Button';
 import { formatCompactCurrencyFromUSD, formatCurrencyFromUSD } from '../utils/formatCurrency';
 import {
-  LineChart,
   Line,
   AreaChart,
   Area,
@@ -29,16 +28,39 @@ import {
 } from 'recharts';
 
 // CustomTooltip component moved outside the main component
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipEntry {
+  color?: string;
+  dataKey?: string | number;
+  name?: string;
+  value?: number | string;
+}
+
+interface AnalyticsTooltipProps {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}
+
+const CustomTooltip: React.FC<AnalyticsTooltipProps> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
         <p className="font-medium text-gray-900 dark:text-white mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: {entry.name.includes('revenue') ? formatCurrencyFromUSD(entry.value) : entry.value.toLocaleString()}
-          </p>
-        ))}
+        {payload.map((entry, index) => {
+          const entryName = String(entry.name ?? '');
+          const entryValue = typeof entry.value === 'number'
+            ? entry.value
+            : Number(entry.value ?? 0);
+
+          return (
+            <p key={`${entry.dataKey}-${index}`} className="text-sm" style={{ color: entry.color }}>
+              {entryName}:{' '}
+              {entryName.toLowerCase().includes('revenue')
+                ? formatCurrencyFromUSD(entryValue)
+                : entryValue.toLocaleString()}
+            </p>
+          );
+        })}
       </div>
     );
   }

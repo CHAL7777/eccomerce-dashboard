@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Search,
   Filter,
@@ -8,13 +8,13 @@ import {
   MapPin,
   Calendar,
   TrendingUp,
-  MoreVertical,
   ChevronLeft,
   ChevronRight,
   Eye,
   Edit,
   Trash2
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Modal from '../components/common/Modal';
@@ -25,7 +25,9 @@ import { formatDate } from '../utils/formatDate';
 const ITEMS_PER_PAGE = 10;
 
 const Customers: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryParam = searchParams.get('q') ?? '';
+  const [searchTerm, setSearchTerm] = useState(queryParam);
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
@@ -134,7 +136,7 @@ const Customers: React.FC = () => {
 
   // Filter and sort customers
   const filteredCustomers = useMemo(() => {
-    let filtered = customers.filter(customer => {
+    const filtered = customers.filter(customer => {
       const matchesSearch = 
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,9 +166,46 @@ const Customers: React.FC = () => {
   }, [searchTerm, selectedStatus, sortBy, sortOrder, customers]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE));
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const hasCustomers = filteredCustomers.length > 0;
+  const firstResult = hasCustomers ? startIndex + 1 : 0;
+  const lastResult = hasCustomers
+    ? Math.min(startIndex + ITEMS_PER_PAGE, filteredCustomers.length)
+    : 0;
+
+  useEffect(() => {
+    setSearchTerm(queryParam);
+  }, [queryParam]);
+
+  useEffect(() => {
+    setCurrentPage((previousPage) => Math.min(previousPage, totalPages));
+  }, [totalPages]);
+
+  const updateSearchParam = (value: string) => {
+    const updatedParams = new URLSearchParams(searchParams);
+    const trimmedValue = value.trim();
+
+    if (trimmedValue) {
+      updatedParams.set('q', trimmedValue);
+    } else {
+      updatedParams.delete('q');
+    }
+
+    setSearchParams(updatedParams, { replace: true });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    updateSearchParam(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: 'all' | 'active' | 'inactive') => {
+    setSelectedStatus(value);
+    setCurrentPage(1);
+  };
 
   // Stats
   const stats = useMemo(() => {
@@ -191,6 +230,7 @@ const Customers: React.FC = () => {
       setSortBy(column);
       setSortOrder('asc');
     }
+    setCurrentPage(1);
   };
 
   return (
@@ -299,7 +339,7 @@ const Customers: React.FC = () => {
                 type="text"
                 placeholder="Search customers by name, email, or phone..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="input-field pl-10"
               />
             </div>
@@ -307,7 +347,7 @@ const Customers: React.FC = () => {
           <div className="flex gap-2">
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as 'all' | 'active' | 'inactive')}
+              onChange={(e) => handleStatusChange(e.target.value as 'all' | 'active' | 'inactive')}
               className="input-field"
             >
               <option value="all">All Status</option>
@@ -377,78 +417,89 @@ const Customers: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {paginatedCustomers.map((customer) => (
-                <tr 
-                  key={customer.id} 
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <td className="table-cell">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
-                        <img 
-                          src={customer.avatar} 
-                          alt={customer.name}
-                          className="w-full h-full object-cover"
-                        />
+              {hasCustomers ? (
+                paginatedCustomers.map((customer) => (
+                  <tr 
+                    key={customer.id} 
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  >
+                    <td className="table-cell">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                          <img 
+                            src={customer.avatar} 
+                            alt={customer.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {customer.name}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            ID: CUST-{customer.id.toString().padStart(4, '0')}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {customer.name}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          ID: CUST-{customer.id.toString().padStart(4, '0')}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="table-cell">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Mail size={14} className="text-gray-400" />
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {customer.email}
-                        </span>
-                      </div>
-                      {customer.phone && (
+                    </td>
+                    <td className="table-cell">
+                      <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <Phone size={14} className="text-gray-400" />
+                          <Mail size={14} className="text-gray-400" />
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {customer.phone}
+                            {customer.email}
                           </span>
                         </div>
+                        {customer.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone size={14} className="text-gray-400" />
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {customer.phone}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      {formatDate(customer.joinDate, 'medium')}
+                    </td>
+                    <td className="table-cell">
+                      <span className="font-medium">{customer.orders}</span>
+                    </td>
+                    <td className="table-cell font-medium">
+                      {formatCurrency(customer.totalSpent)}
+                    </td>
+                    <td className="table-cell">
+                      {customer.status === 'active' ? (
+                        <Badge variant="success">Active</Badge>
+                      ) : (
+                        <Badge variant="danger">Inactive</Badge>
                       )}
-                    </div>
-                  </td>
-                  <td className="table-cell">
-                    {formatDate(customer.joinDate, 'medium')}
-                  </td>
-                  <td className="table-cell">
-                    <span className="font-medium">{customer.orders}</span>
-                  </td>
-                  <td className="table-cell font-medium">
-                    {formatCurrency(customer.totalSpent)}
-                  </td>
-                  <td className="table-cell">
-                    {customer.status === 'active' ? (
-                      <Badge variant="success">Active</Badge>
-                    ) : (
-                      <Badge variant="danger">Inactive</Badge>
-                    )}
-                  </td>
-                  <td className="table-cell">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        icon={Eye}
-                        onClick={() => setViewCustomer(customer)}
-                      />
-                      <Button variant="ghost" size="sm" icon={Edit} />
-                      <Button variant="ghost" size="sm" icon={Trash2} />
-                    </div>
+                    </td>
+                    <td className="table-cell">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          icon={Eye}
+                          onClick={() => setViewCustomer(customer)}
+                        />
+                        <Button variant="ghost" size="sm" icon={Edit} />
+                        <Button variant="ghost" size="sm" icon={Trash2} />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    No customers found. Try a different search keyword or status.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -456,9 +507,9 @@ const Customers: React.FC = () => {
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div className="text-sm text-gray-700 dark:text-gray-300">
-            Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+            Showing <span className="font-medium">{firstResult}</span> to{' '}
             <span className="font-medium">
-              {Math.min(startIndex + ITEMS_PER_PAGE, filteredCustomers.length)}
+              {lastResult}
             </span>{' '}
             of <span className="font-medium">{filteredCustomers.length}</span> results
           </div>
@@ -468,30 +519,34 @@ const Customers: React.FC = () => {
               size="sm"
               icon={ChevronLeft}
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              disabled={currentPage === 1 || !hasCustomers}
             >
               Previous
             </Button>
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
-                .map((page, index, array) => (
-                  <React.Fragment key={page}>
-                    {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="px-2">...</span>
-                    )}
-                    <button
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors
-                        ${currentPage === page
-                          ? 'bg-primary-600 text-white'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  </React.Fragment>
-                ))}
+              {hasCustomers ? (
+                Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
+                  .map((page, index, array) => (
+                    <React.Fragment key={page}>
+                      {index > 0 && array[index - 1] !== page - 1 && (
+                        <span className="px-2">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors
+                          ${currentPage === page
+                            ? 'bg-primary-600 text-white'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    </React.Fragment>
+                  ))
+              ) : (
+                <span className="px-3 text-sm text-gray-500 dark:text-gray-400">No pages</span>
+              )}
             </div>
             <Button
               variant="outline"
@@ -499,7 +554,7 @@ const Customers: React.FC = () => {
               icon={ChevronRight}
               iconPosition="right"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || !hasCustomers}
             >
               Next
             </Button>

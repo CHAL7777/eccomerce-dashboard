@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -16,7 +17,7 @@ const Footer: React.FC = () => {
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Made with <span className="text-red-500">♥</span> by{' '}
               <a 
-                href="https://github.com/chaldev" 
+                href="https://github.com/CHAL7777" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -31,9 +32,14 @@ const Footer: React.FC = () => {
             
             {/* Text Links */}
             <div className="flex items-center gap-6">
-              <FooterLink href="#">Privacy Policy</FooterLink>
-              <FooterLink href="#">Terms of Service</FooterLink>
-              <FooterLink href="#">Support</FooterLink>
+              <FooterNavLink to="/settings">Privacy Policy</FooterNavLink>
+              <FooterNavLink to="/settings">Terms of Service</FooterNavLink>
+              <a
+                href="mailto:support@storedash.com"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+              >
+                Support
+              </a>
             </div>
 
             {/* Divider (Hidden on mobile) */}
@@ -63,14 +69,13 @@ const Footer: React.FC = () => {
   );
 };
 
-// Helper component for text links
-const FooterLink: React.FC<{ href: string; children: React.ReactNode }> = ({ href, children }) => (
-  <a 
-    href={href} 
+const FooterNavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
+  <Link 
+    to={to}
     className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
   >
     {children}
-  </a>
+  </Link>
 );
 
 export default Footer;

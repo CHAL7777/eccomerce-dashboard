@@ -16,6 +16,16 @@ interface ChartData {
   sales: number;
 }
 
+interface TooltipEntry {
+  value?: number | string;
+}
+
+interface SalesTooltipProps {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}
+
 const salesData: ChartData[] = [
   { month: 'Jan', revenue: 4000, sales: 2400 },
   { month: 'Feb', revenue: 3000, sales: 1398 },
@@ -31,19 +41,26 @@ const salesData: ChartData[] = [
   { month: 'Dec', revenue: 1890, sales: 4800 },
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip: React.FC<SalesTooltipProps> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
+    const revenueValue = typeof payload[0]?.value === 'number'
+      ? payload[0].value
+      : Number(payload[0]?.value ?? 0);
+    const salesValue = typeof payload[1]?.value === 'number'
+      ? payload[1].value
+      : Number(payload[1]?.value ?? 0);
+
     return (
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
         <p className="font-medium text-gray-900 dark:text-white mb-2">{label}</p>
         <div className="space-y-1">
           <p className="text-sm">
             <span className="text-blue-600 dark:text-blue-400">Revenue: </span>
-            <span className="font-medium">{formatCurrency(payload[0].value || 0)}</span>
+            <span className="font-medium">{formatCurrency(revenueValue)}</span>
           </p>
           <p className="text-sm">
             <span className="text-green-600 dark:text-green-400">Sales: </span>
-            <span className="font-medium">{payload[1].value?.toLocaleString()}</span>
+            <span className="font-medium">{salesValue.toLocaleString()}</span>
           </p>
         </div>
       </div>
