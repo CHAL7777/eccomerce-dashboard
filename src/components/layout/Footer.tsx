@@ -5,22 +5,22 @@ const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-6 mt-auto transition-colors duration-300">
+    <footer className="w-full bg-white/60 dark:bg-slate-950/60 backdrop-blur border-t border-slate-200/80 dark:border-slate-800 py-4 mt-auto transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           
           {/* Left Side: Copyright & Credits */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              © {currentYear} Ecommerce Dashboard. All rights reserved.
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              © {currentYear} StoreDash. All rights reserved.
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              Made with <span className="text-red-500">♥</span> by{' '}
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+              Made with <span className="text-rose-500">♥</span> by{' '}
               <a 
                 href="https://github.com/CHAL7777" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className="font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 chaldev
               </a>
@@ -36,14 +36,14 @@ const Footer: React.FC = () => {
               <FooterNavLink to="/settings">Terms of Service</FooterNavLink>
               <a
                 href="mailto:support@storedash.com"
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200"
               >
                 Support
               </a>
             </div>
 
             {/* Divider (Hidden on mobile) */}
-            <div className="hidden sm:block w-px h-4 bg-gray-300 dark:bg-gray-700"></div>
+            <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
 
             {/* Social Icons */}
             <div className="flex items-center gap-4">
@@ -52,7 +52,7 @@ const Footer: React.FC = () => {
                 target="_blank" 
                 rel="noopener noreferrer"
                 aria-label="GitHub"
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors duration-200"
               >
                 {/* GitHub SVG Icon */}
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -72,7 +72,7 @@ const Footer: React.FC = () => {
 const FooterNavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
   <Link 
     to={to}
-    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200"
   >
     {children}
   </Link>

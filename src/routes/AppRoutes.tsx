@@ -12,8 +12,9 @@ const Settings = React.lazy(() => import('../pages/Settings'));
 const Login = React.lazy(() => import('../pages/Login'));
 
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+  <div className="flex flex-col items-center justify-center gap-3 h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="w-9 h-9 border-[3px] border-primary-200 dark:border-primary-500/20 border-t-primary-600 rounded-full animate-spin"></div>
+    <p className="text-xs font-medium text-slate-400 tracking-wide">Loading…</p>
   </div>
 );
 

@@ -51,16 +51,16 @@ const CustomTooltip: React.FC<SalesTooltipProps> = ({ active, payload, label }) 
       : Number(payload[1]?.value ?? 0);
 
     return (
-      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-        <p className="font-medium text-gray-900 dark:text-white mb-2">{label}</p>
-        <div className="space-y-1">
-          <p className="text-sm">
-            <span className="text-blue-600 dark:text-blue-400">Revenue: </span>
-            <span className="font-medium">{formatCurrency(revenueValue)}</span>
+      <div className="menu-surface p-3 min-w-[10rem]">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{label}</p>
+        <div className="space-y-1.5">
+          <p className="flex items-center justify-between gap-4 text-sm">
+            <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span className="h-2 w-2 rounded-full bg-primary-500" />Revenue</span>
+            <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{formatCurrency(revenueValue)}</span>
           </p>
-          <p className="text-sm">
-            <span className="text-green-600 dark:text-green-400">Sales: </span>
-            <span className="font-medium">{salesValue.toLocaleString()}</span>
+          <p className="flex items-center justify-between gap-4 text-sm">
+            <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><span className="h-2 w-2 rounded-full bg-emerald-500" />Sales</span>
+            <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{salesValue.toLocaleString()}</span>
           </p>
         </div>
       </div>
@@ -78,8 +78,8 @@ const SalesChart: React.FC = () => {
       >
         <defs>
           <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#6366F1" stopOpacity={0.35}/>
+            <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
           </linearGradient>
           <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
@@ -87,8 +87,9 @@ const SalesChart: React.FC = () => {
           </linearGradient>
         </defs>
         <CartesianGrid 
-          strokeDasharray="3 3" 
-          stroke="#374151" 
+          strokeDasharray="4 4" 
+          stroke="currentColor"
+          className="text-slate-200 dark:text-slate-800"
           vertical={false} 
           horizontal={true}
         />
@@ -96,30 +97,34 @@ const SalesChart: React.FC = () => {
           dataKey="month" 
           axisLine={false}
           tickLine={false}
-          tick={{ fill: '#6B7280', fontSize: 12 }}
+          tick={{ fill: '#94A3B8', fontSize: 12 }}
+          dy={8}
         />
         <YAxis 
           axisLine={false}
           tickLine={false}
-          tick={{ fill: '#6B7280', fontSize: 12 }}
+          tick={{ fill: '#94A3B8', fontSize: 12 }}
           tickFormatter={(value) => `$${value / 1000}k`}
+          width={44}
         />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1, strokeDasharray: '4 4' }} />
         <Area
           type="monotone"
           dataKey="revenue"
-          stroke="#3B82F6"
+          stroke="#6366F1"
           fill="url(#colorRevenue)"
-          strokeWidth={2}
+          strokeWidth={2.5}
           name="Revenue"
+          activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
         />
         <Area
           type="monotone"
           dataKey="sales"
           stroke="#10B981"
           fill="url(#colorSales)"
-          strokeWidth={2}
+          strokeWidth={2.5}
           name="Sales"
+          activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
         />
       </AreaChart>
     </ResponsiveContainer>

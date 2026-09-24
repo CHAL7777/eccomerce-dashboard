@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import Button from './Button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -48,49 +47,41 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div 
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-          onClick={onClose}
-        />
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+      />
 
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
-          &#8203;
-        </span>
-
-        <div
-          className={`inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:p-6 w-full ${sizeClasses[size]}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label={title}
-        >
-          <div className="absolute top-0 right-0 pt-4 pr-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={X}
-              onClick={onClose}
-              className="!p-1"
-            />
-          </div>
-
-          <div className="mb-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              {title}
-            </h3>
-          </div>
-
-          <div className="mb-6">
-            {children}
-          </div>
-
-          {footer && (
-            <div className="flex justify-end gap-3">
-              {footer}
-            </div>
-          )}
+      <div
+        className={`relative w-full ${sizeClasses[size]} bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 max-h-[92vh] flex flex-col animate-fade-up`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
+        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">
+            {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="icon-btn h-8 w-8 -mr-2"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
+
+        <div className="px-6 py-5 overflow-y-auto">
+          {children}
+        </div>
+
+        {footer && (
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 rounded-b-2xl">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

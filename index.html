@@ -4,7 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png+xml" href="/cart.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ecommerce-dashboard</title>
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="description" content="StoreDash — modern ecommerce admin dashboard" />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <title>StoreDash · Ecommerce Dashboard</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          var dark = t === 'dark' || (t !== 'light' && t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
